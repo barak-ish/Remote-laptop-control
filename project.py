@@ -1,9 +1,32 @@
 import streamlit as st
 import os
 import webbrowser
-from ctypes import cast, POINTER
-from comtypes import CLSCTX_ALL
-from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+try:
+    from ctypes import cast, POINTER
+    from comtypes import CLSCTX_ALL
+    from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+
+    # Define functions that use comtypes
+    def increase_volume():
+        devices = AudioUtilities.GetSpeakers()
+        interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        volume = cast(interface, POINTER(IAudioEndpointVolume))
+        a = volume.GetMasterVolumeLevel()
+        volume.SetMasterVolumeLevel(a + 10.0, None)
+
+        st.success("Volume increased.")
+
+    def decrease_volume():
+        devices = AudioUtilities.GetSpeakers()
+        interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        volume = cast(interface, POINTER(IAudioEndpointVolume))
+        a = volume.GetMasterVolumeLevel()
+        volume.SetMasterVolumeLevel(a - 10.0, None)
+
+        st.success("Volume decreased.")
+
+except ImportError:
+    st.warning("Volume control functions are not available on this platform.")
 
 def open_folder(folder_name):
     common_folders = ["downloads", "documents", "desktop"]
@@ -18,24 +41,6 @@ def open_folder(folder_name):
             return
 
     st.error(f"Folder '{folder_name}' not found.")
-
-def increase_volume():
-    devices = AudioUtilities.GetSpeakers()
-    interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-    volume = cast(interface, POINTER(IAudioEndpointVolume))
-    a = volume.GetMasterVolumeLevel()
-    volume.SetMasterVolumeLevel(a + 10.0, None)
-
-    st.success("Volume increased.")
-
-def decrease_volume():
-    devices = AudioUtilities.GetSpeakers()
-    interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-    volume = cast(interface, POINTER(IAudioEndpointVolume))
-    a = volume.GetMasterVolumeLevel()
-    volume.SetMasterVolumeLevel(a - 10.0, None)
-
-    st.success("Volume decreased.")
 
 def play_music(song, artist):
     search_song = f"https://www.audiomack.com/{artist}/song/{song}"
